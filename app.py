@@ -39,6 +39,7 @@ def test_content_extract(zjc_ex):
 def extract_zengjianchi(zjc_ex, html_dir_path, html_id):
     record_list = []
     for record in zjc_ex.extract(os.path.join(html_dir_path, html_id)):
+        #接下来一系列的if判断目的在于保证一条结构化信息上的主键均不为空且长度合法，否则不认为这是一条结构化信息
         if record is not None and record.shareholderFullName is not None and \
                 len(record.shareholderFullName) > 1 and \
                 record.finishDate is not None and len(record.finishDate) >= 6:
@@ -50,28 +51,42 @@ def extract_zengjianchi(zjc_ex, html_dir_path, html_id):
     return record_list
 
 
-def extract_zengjianchi_from_html_dir(zjc_ex, html_dir_path):
-    # print('公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例')
-    # with open("result/zengjianchi.txt", "w", encoding="utf-8") as result:
-    with open("result/hetong.txt", "w", encoding="utf-8") as result:
-        # result.write("公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例" + "\n")
-        result.write("公告id\t甲方\t乙方\t项目名称\t合同名称\t合同金额上限\t合同金额下限\t联合体成员" + "\n")
-        for html_id in os.listdir(html_dir_path):
+def extract_zengjianchi_from_html_dir(zjc_ex, html_dir_path, result_path_model_name):
+    with open(result_path_model_name, "w", encoding="utf-8") as result:
+        if model_name == "zengjianchi":
+            result.write("公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例" + "\n")
+        elif model_name == "hetong":
+            result.write("公告id\t甲方\t乙方\t项目名称\t合同名称\t合同金额上限\t合同金额下限\t联合体成员" + "\n")
+        count = 0
+        for html_id in os.listdir(html_dir_path):   #逐个对html文件进行信息抽取
+            #抽取并返回结构化数据列表，列表中每个元素为一行结构化数据
             record_list = extract_zengjianchi(zjc_ex, html_dir_path, html_id)
+            count += 1
+            if count == 50: break
             for record in record_list:
                 result.write(record + "\n")
 
 
 
 if __name__ == "__main__":
-
-    # zengjianchi_config_file_path = 'config/ZengJianChiConfig.json'
-    zengjianchi_config_file_path = 'config/HeTongConfig.json'
+    config_path = "./config"
     ner_model_dir_path = './ltp_data_v3.4.0'
     ner_blacklist_file_path = 'config/ner_com_blacklist.txt'
+    data_path = "test_data"
+    # data_path = "./test_dataB"
+    result = "result"
+    # result = "resultB"
 
-    zjc_ex = ZengJianChiExtractor(zengjianchi_config_file_path, ner_model_dir_path, ner_blacklist_file_path)
-    # extract_zengjianchi_from_html_dir(zjc_ex, 'test_data/zengjianchi/html')
-    extract_zengjianchi_from_html_dir(zjc_ex, 'test_data/hetong/html')
+    # model_names = ["zengjianchi", "dingzeng"]
+    model_names = ["zengjianchi"]
+    for model_name in model_names:
+        #根据不同数据类型定义不同路径
+        config_file_path = os.path.join(config_path, model_name+"_config.json")
+        data_path_model_name = os.path.join(data_path, model_name+"/html")
+        result_path_model_name = os.path.join(result, model_name+'.txt')
+        #初始化信息抽取类
+        zjc_ex = ZengJianChiExtractor(config_file_path, ner_model_dir_path, ner_blacklist_file_path)
+        # 进行信息抽取
+        extract_zengjianchi_from_html_dir(zjc_ex, data_path_model_name, result_path_model_name)
 
 
