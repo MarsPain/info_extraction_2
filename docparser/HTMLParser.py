@@ -70,7 +70,7 @@ class HTMLParser(object):
                             col_length = len(table_dict[0])
                             for col_idx in range(col_length):
                                 head_row[col_idx] = table_dict[0][col_idx] + table_dict[1][col_idx]
-                            new_table_dict[0] = head_row
+                            new_table_dict[0] = head_row    #第一行是表头
                             for row_idx in range(2, row_length):
                                 new_table_dict[row_idx - 1] = table_dict[row_idx]
                             rs_list.append(new_table_dict)

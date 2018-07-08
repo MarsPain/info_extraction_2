@@ -155,7 +155,7 @@ class ZengJianChiExtractor(object):
                         try:
                             text = table_dict[j][i]
                             if table_dict_field_pattern.is_match_row_skip_pattern(text):
-                                skip_row_set.add(j)
+                                skip_row_set.add(j) #将需要丢弃的行索引添加到元组中
                         except KeyError:
                             pass
         if len(field_col_dict) <= 0:
@@ -332,8 +332,8 @@ class ZengJianChiExtractor(object):
         rs = []
         paragraphs = self.html_parser.parse_content(html_file_path)
         rs_paragraphs = self.extract_from_paragraphs(paragraphs)
-        for table_dict in self.html_parser.parse_table(html_file_path):
-            rs_table = self.extract_from_table_dict(table_dict)
+        for table_dict in self.html_parser.parse_table(html_file_path): #从html的表格中生成并返回二维字典table_dict
+            rs_table = self.extract_from_table_dict(table_dict) #从每个table_dict中抽取结构化信息
             if len(rs_table) > 0:
                 if len(rs) > 0:
                     self.mergeRecord(rs, rs_table)

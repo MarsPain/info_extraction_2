@@ -40,6 +40,7 @@ def extract_zengjianchi(zjc_ex, html_dir_path, html_id):
     record_list = []
     for record in zjc_ex.extract(os.path.join(html_dir_path, html_id)): #extract为核心函数
         #接下来一系列的if判断目的在于保证一条结构化信息上的主键均不为空且长度合法，否则不认为这是一条结构化信息
+        #处理不同的数据要采取不同的策略进行判断
         if record is not None and record.shareholderFullName is not None and \
                 len(record.shareholderFullName) > 1 and \
                 record.finishDate is not None and len(record.finishDate) >= 6:
@@ -77,8 +78,8 @@ if __name__ == "__main__":
     result = "result"
     # result = "resultB"
 
-    # model_names = ["zengjianchi", "dingzeng"]
-    model_names = ["zengjianchi"]
+    # model_names = ["zengjianchi", "hetong, "dingzeng"]
+    model_names = ["hetong"]
     for model_name in model_names:
         #根据不同数据类型定义不同路径
         config_file_path = os.path.join(config_path, model_name+"_config.json")
