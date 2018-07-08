@@ -51,9 +51,11 @@ def extract_zengjianchi(zjc_ex, html_dir_path, html_id):
 
 
 def extract_zengjianchi_from_html_dir(zjc_ex, html_dir_path):
-    print('公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例')
-    with open("result/zengjianchi/zengjianchi.txt", "w", encoding="utf-8") as result:
-        result.write("公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例" + "\n")
+    # print('公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例')
+    # with open("result/zengjianchi.txt", "w", encoding="utf-8") as result:
+    with open("result/hetong.txt", "w", encoding="utf-8") as result:
+        # result.write("公告id\t股东全称\t股东简称\t变动截止日期\t变动价格\t变动数量\t变动后持股数\t变动后持股比例" + "\n")
+        result.write("公告id\t甲方\t乙方\t项目名称\t合同名称\t合同金额上限\t合同金额下限\t联合体成员" + "\n")
         for html_id in os.listdir(html_dir_path):
             record_list = extract_zengjianchi(zjc_ex, html_dir_path, html_id)
             for record in record_list:
@@ -63,11 +65,13 @@ def extract_zengjianchi_from_html_dir(zjc_ex, html_dir_path):
 
 if __name__ == "__main__":
 
-    zengjianchi_config_file_path = 'config/ZengJianChiConfig.json'
+    # zengjianchi_config_file_path = 'config/ZengJianChiConfig.json'
+    zengjianchi_config_file_path = 'config/HeTongConfig.json'
     ner_model_dir_path = './ltp_data_v3.4.0'
     ner_blacklist_file_path = 'config/ner_com_blacklist.txt'
 
     zjc_ex = ZengJianChiExtractor(zengjianchi_config_file_path, ner_model_dir_path, ner_blacklist_file_path)
-    extract_zengjianchi_from_html_dir(zjc_ex, 'test_data/zengjianchi/html')
+    # extract_zengjianchi_from_html_dir(zjc_ex, 'test_data/zengjianchi/html')
+    extract_zengjianchi_from_html_dir(zjc_ex, 'test_data/hetong/html')
 
 
