@@ -26,17 +26,19 @@ class HTMLParser(object):
             paragraphs = []
             for div in soup.find_all('div'):
                 div_type = div.get('type')
+                #添加div_type == 'paragraph'的div块中的文本
                 if div_type is not None and div_type == 'paragraph':
                     paragraphs.append(div)
             for paragraph_div in paragraphs:
-                has_sub_paragraph = False
+                has_sub_paragraph = False   #判断paragraph中是否有子paragraph
                 for div in paragraph_div.find_all('div'):
                     div_type = div.get('type')
                     if div_type is not None and div_type == 'paragraph':
                         has_sub_paragraph = True
                 if has_sub_paragraph:
-                    continue
-                rs.append([])
+                    continue    #若存在子paragraph则continue，因为后面会遍历到该paragraph
+                rs.append([])   #每个paragraphs中的content保存在rs的子列表中
+                #将paragraph中的content添加到列表中
                 for content_div in paragraph_div.find_all('div'):
                     div_type = content_div.get('type')
                     if div_type is not None and div_type == 'content':
@@ -44,7 +46,7 @@ class HTMLParser(object):
         paragraphs = []
         for content_list in rs:
             if len(content_list) > 0:
-                paragraphs.append(''.join(content_list))
+                paragraphs.append(''.join(content_list))    #每个content_list结合在一起成为一个字符串
         return paragraphs
 
     def parse_table(self, html_file_path):
@@ -83,25 +85,26 @@ class HTMLParser(object):
         rs_dict = {}
         row_index = 0
         is_head_two_rowspan, is_head = False, True
-        for tr in table.find_all('tr'):
+        for tr in table.find_all('tr'): #tr为表格的一行
             col_index, cur_col_index = 0, 0
-            for td in tr.find_all('td'):
-                rowspan = td.get('rowspan')
+            for td in tr.find_all('td'):    #查找每一行中每个单元中的数据
+                rowspan = td.get('rowspan') #列方向的单元跨越行数（所占行数），即一个单元格的元素对应多行数据
                 rowspan = int(rowspan) if (rowspan is not None and int(rowspan) > 1) else 1
-                colspan = td.get('colspan')
+                colspan = td.get('colspan') #行方向的单元跨越行数（所占列数）
                 colspan = int(colspan) if (colspan is not None and int(colspan) > 1) else 1
                 if is_head:
-                    if rowspan > 1 or colspan > 1:
+                    if rowspan > 1 or colspan > 1:  #is_head_two_rowspan和is_head具体有什么意义？
                         is_head_two_rowspan = True
                     is_head = False
                 for r in range(rowspan):
-                    if (row_index + r) not in rs_dict:
+                    if (row_index + r) not in rs_dict:  #每一行创建一个字典存储一行的信息
                         rs_dict[row_index + r] = {}
                     for c in range(colspan):
                         cur_col_index = col_index
                         while cur_col_index in rs_dict[row_index + r]:
                             cur_col_index += 1
-                        rs_dict[row_index + r][cur_col_index] = TextUtils.remove_blank_chars(td.text)
+                        #将信息添加到每一行的字典中，键值对为列索引和具体的文本
+                        rs_dict[row_index + r][cur_col_index] = TextUtils.remove_blank_chars(td.text)   #这里是双重字典
                         cur_col_index += 1
                 col_index = cur_col_index
             row_index += 1

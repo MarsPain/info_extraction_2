@@ -38,7 +38,7 @@ def test_content_extract(zjc_ex):
 
 def extract_zengjianchi(zjc_ex, html_dir_path, html_id):
     record_list = []
-    for record in zjc_ex.extract(os.path.join(html_dir_path, html_id)):
+    for record in zjc_ex.extract(os.path.join(html_dir_path, html_id)): #extract为核心函数
         #接下来一系列的if判断目的在于保证一条结构化信息上的主键均不为空且长度合法，否则不认为这是一条结构化信息
         if record is not None and record.shareholderFullName is not None and \
                 len(record.shareholderFullName) > 1 and \
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         config_file_path = os.path.join(config_path, model_name+"_config.json")
         data_path_model_name = os.path.join(data_path, model_name+"/html")
         result_path_model_name = os.path.join(result, model_name+'.txt')
-        #初始化信息抽取类
+        #初始化信息抽取类（核心类）
         zjc_ex = ZengJianChiExtractor(config_file_path, ner_model_dir_path, ner_blacklist_file_path)
         # 进行信息抽取
         extract_zengjianchi_from_html_dir(zjc_ex, data_path_model_name, result_path_model_name)
