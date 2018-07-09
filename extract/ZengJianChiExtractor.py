@@ -103,9 +103,9 @@ class ZengJianChiExtractor(object):
         self.html_parser = HTMLParser.HTMLParser()
         self.config = None
         self.ner_tagger = NERTagger.NERTagger(ner_model_dir_path, ner_blacklist_file_path)
-        self.com_abbr_dict = {}
-        self.com_full_dict = {}
-        self.com_abbr_ner_dict = {}
+        self.com_abbr_dict = {} #存储公司简称到公司全称的映射的字典
+        self.com_full_dict = {} #存储全称到简称的映射的字典
+        self.com_abbr_ner_dict = {} #存储实体到标签的映射的字典
 
         with codecs.open(config_file_path, encoding='utf-8', mode='r') as fp:
             self.config = json.loads(fp.read())
@@ -195,7 +195,7 @@ class ZengJianChiExtractor(object):
         record_list = []
         for para in paragraphs:
             change_records_para, change_after_records_para = self.extract_from_paragraph(para)
-            change_records += change_records_para
+            change_records += change_records_para   #列表拼接
             change_after_records += change_after_records_para
         self.mergeRecord(change_records, change_after_records)
         for record in change_records:
@@ -205,29 +205,30 @@ class ZengJianChiExtractor(object):
 
     def extract_company_name(self, paragraph):
         # print(paragraph)
+        #通过正则表达式抽取可能存在公司全称及简称的文本片段
         targets = re.finditer(r"<org>(?P<com>.{1,28}?)</org>[(（].{0,5}?简称:?[\"“](?P<com_abbr>.{2,6}?)[\"”][)）]", paragraph)
         size_before = len(self.com_abbr_ner_dict)
         for target in targets:
             # print("===> ", target.group())
-            com_abbr = target.group("com_abbr")
-            com_name = target.group("com")
+            com_abbr = target.group("com_abbr") #简称
+            com_name = target.group("com")  #全称
             if com_abbr != None and com_name != None:
                 self.com_abbr_dict[com_abbr] = com_name
                 self.com_full_dict[com_name] = com_abbr
                 self.com_abbr_ner_dict[com_abbr] = "Ni"
-        return len(self.com_abbr_ner_dict) - size_before
+        return len(self.com_abbr_ner_dict) - size_before    #若返回值大于0，则说明出现了新的实体
 
     def extract_from_paragraph(self, paragraph):
-        tag_res = self.ner_tagger.ner(paragraph, self.com_abbr_ner_dict)
-        tagged_str = tag_res.get_tagged_str()
-        #抽取公司简称
+        tag_res = self.ner_tagger.ner(paragraph, self.com_abbr_ner_dict)    #生成并返回实体识别结果，com_abbr_ner_dict一开始为空
+        tagged_str = tag_res.get_tagged_str()   #将实体标签加入字符串中，用于正则表达式的匹配
+        #通过正则表达式抽取公司简称，填充com_abbr_ner_dict字典
         new_size = self.extract_company_name(tagged_str)
-        if new_size > 0:
+        if new_size > 0:    #如果出现了新的实体，重复进行前面的操作、将实体标签加入字符串中
             tag_res = self.ner_tagger.ner(paragraph, self.com_abbr_ner_dict)
             tagged_str = tag_res.get_tagged_str()
 
-        change_records = self.extract_change(tagged_str)
-        change_after_records = self.extract_change_after(tagged_str)
+        change_records = self.extract_change(tagged_str)    #抽取增减持之前的数据信息
+        change_after_records = self.extract_change_after(tagged_str)    #抽取增减持之后的数据信息
         return change_records,change_after_records
 
     def mergeRecord(self, changeRecords, changeAfterRecords):
@@ -292,7 +293,7 @@ class ZengJianChiExtractor(object):
             end_pos = target.end()
             #查找公司
             pat_com = re.compile(r"<org>(.*?)</org>")
-            m_com = pat_com.findall(paragraph,0,end_pos)
+            m_com = pat_com.findall(paragraph,0,end_pos)    #注意正则匹配的范围！
             shareholder = ""
             if m_com != None and len(m_com) > 0:
                 shareholder = m_com[-1]
@@ -321,7 +322,7 @@ class ZengJianChiExtractor(object):
     def getShareholder(self, shareholder):
         #归一化公司全称简称
         if shareholder in self.com_full_dict:
-            return shareholder, self.com_full_dict.get(shareholder, "")
+            return shareholder, self.com_full_dict.get(shareholder, "") #dict.get取得指定键的值
         if shareholder in self.com_abbr_dict:
             return self.com_abbr_dict.get(shareholder, ""),shareholder
         #股东为自然人时不需要简称
@@ -345,6 +346,7 @@ class ZengJianChiExtractor(object):
             return rs_paragraphs
         else:
             for record in rs:
+                #结构化的table中一般不列出简称，所以从之前被保存的全称简称的映射字典中找到简称
                 full_company_name, abbr_company_name = self.getShareholder(record.shareholderFullName)
                 if full_company_name is not None and len(full_company_name) > 0 \
                         and abbr_company_name is not None and len(abbr_company_name) > 0:
