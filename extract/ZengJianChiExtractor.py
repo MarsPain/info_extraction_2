@@ -197,7 +197,7 @@ class ZengJianChiExtractor(object):
             change_records_para, change_after_records_para = self.extract_from_paragraph(para)
             change_records += change_records_para   #列表拼接
             change_after_records += change_after_records_para
-        self.mergeRecord(change_records, change_after_records)
+        self.mergeRecord(change_records, change_after_records)  #将增减持后的数据信息融合到增减持前的信息作为最终要输出的信息
         for record in change_records:
             record_list.append(record)
         return record_list
@@ -335,9 +335,10 @@ class ZengJianChiExtractor(object):
         rs_paragraphs = self.extract_from_paragraphs(paragraphs)
         for table_dict in self.html_parser.parse_table(html_file_path): #从html的表格中生成并返回二维字典table_dict
             rs_table = self.extract_from_table_dict(table_dict) #从每个table_dict中抽取结构化信息
+            print(rs_table[0])
             if len(rs_table) > 0:
                 if len(rs) > 0:
-                    self.mergeRecord(rs, rs_table)
+                    self.mergeRecord(rs, rs_table)  #增减持的信息和增减持后的持股信息可能出现在前后的两个列表中，所以也需要进行信息融合
                     break
                 else:
                     rs.extend(rs_table)
